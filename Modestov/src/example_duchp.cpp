@@ -11,108 +11,114 @@ using namespace std;
 
 namespace {
 //  ГРАНИЧНЫЕ УСЛОВИЯ
-#define START 0.
-#define END M_PI * 2.
-
-#define SIZE 256
-#define STEP (END - START) / SIZE
+#define START_ 0.
+#define END_ M_PI * 2.
+#define SIZE_ 270
+#define STEP_ (END_ - START_) / SIZE_
 #define To 0
-#define Tn 100
+#define Tn 200
 #define t ((To - Tn) / SIZE)
-#define H 35
-#define HIGH 72
-#define PAR H - 1
-#define tik 45
+#define H 42
+#define HIGH ((H) * 2 + 2)
+#define PAR (H - 3)
+#define tik 7
+#define EXP_1 sin
 #define PRIVET "\nd^2U   d^2U\n____ = ____        , 0 <= X <= 1,      0 <= t <= T;\ndT^2   dX^2"
     
+    int SIZE = SIZE_;
+    double STEP = STEP_;
+    double START = START_;
+    double END = END_;
     WINDOW *W;
-    // double m1[SIZE];
     vector<double> m1(SIZE);
     vector<double> m2(SIZE);
     vector<double> m3(SIZE);
     vector<int> solution(SIZE);
-    char line[SIZE + 2];
-
-    // //  ПЕРВОЕ НАЧАЛЬНОЕ УСЛОВИЕ
-    // m1[0] = 0;    
-    // //  ВТОРОЕ НАЧАЛЬНОЕ УСЛОВИЕ
-    // m1[SIZE - 1] = 3;
+    char line[SIZE_ + 2];
 };
 
+void func_case(double(func) (double), double start, double end);
 void print(vector<double> value);
-void nach();
+void nach(double(func) (double));
 void duchp();
 void sleep(int milisec);
 
 int main() {
     initscr();
     W = newwin(HIGH, SIZE + 2, 0, 0);
-    // field.instull_win(win);
     waddstr(W, PRIVET);
     wrefresh(W);
     wmove(W, 0, 0);
-    sleep(500);
-    // cout << "kearhgkh\n";
-    // initscr();
-    // W = newwin(2 * HIGH + 1, SIZE, 0, 0);
-    // waddstr(W, PRIVET);
-    // wrefresh(W);
-    // wmove(W, 0, 0);
-    // sleep(1000);
+    sleep(1000);
 
-    nach();
-    duchp();
-    // print(m3);
+    func_case(sin, 0., M_PI);
+    func_case(sin, 0., 2. * M_PI);
+    func_case(sin, -M_PI, 2. * M_PI);
+    func_case(cos, (-2.) * M_PI - M_PI_2, M_PI + M_PI_2);
+    func_case(cos, M_PI_2, 5. * M_PI + M_PI_2);
 
     endwin();
     return 0;
 }
 
+void func_case(double(func) (double), double start, double end) {
+    START = start;
+    END = end;
+    STEP = (END - START) / SIZE;
+    nach(func);
+    duchp();
+}
+
 void duchp() {
-    for (double k = To + 2. * STEP; k < Tn; k += STEP) {
+    vector<double> *tmp;
+    vector<double> *v1 = &m1;
+    vector<double> *v2 = &m2;
+    vector<double> *v3 = &m3;
+    for (int k = To; k < Tn; ++k) {
         for (int i = 0; i < SIZE; i++) {
-            m3[i] = m2[i + 1] + m2[i - 1] - m1[i];
+            (*v3)[i] = (*v2)[i + 1] + (*v2)[i - 1] - (*v1)[i];
         }
-        for (int i = 0; i < SIZE; i++) {
-            m1[i] = m2[i];
-            m2[i] = m3[i];
-        }
-        print(m3);
+        tmp = v1;
+        v1 = v2;
+        v2 = v3;
+        v3 = tmp;
+        print(m2);
     }
     
 }
 
-void nach() {
-    for (double i = 0; i < SIZE; i++) {
-        m1[i] = sin(START + 2. * i * STEP);
+void nach(double(func) (double)) {
+    for (int i = 0; i < SIZE; i++) {
+        m1[i] = func(START + i * STEP);
     }
     print(m1);
-    for (double i = 0; i < SIZE; i++) {
+    for (int i = 0; i < SIZE; i++) {
         m2[i] = 0. + STEP * STEP / 2. * m1[i] + m1[i];
     }
     print(m2);
 }
 
-void print(vector<double> value)
-{
-    // noecho();
-    // cbreak();
+void print(vector<double> value) {
     const char * ln;
     int i;
     scrollok(W, TRUE);
-    // vector<int>::iterator it;
     for (int i = 0; i < SIZE; i++) {
-        solution[i] = round(value[i] * PAR);
-        // cout << " " << solution[i];
+        solution[i] = (int)(value[i] * PAR);
     }
 
-    for (int k = H; k >= -H; k--)
-    {
+    for (int k = H; k >= -H; k--) {
         for (i = 0; i < SIZE; ++i) {
-            // cout << ' ' << solution[i];
             if (k == H || k == -H || k == 0) {
                 line[i + 1] = '-';
             } else if (k == solution[i]) {
+                // if (i > 0 && i < SIZE - 1) {
+                //     int dif = (solution[i+1] - solution[i-1]);
+                //     if (dif > 0) line[i + 1] = '/';
+                //     else if (dif < 0) line[i + 1] = '\\';
+                //     else line[i + 1] = '-';
+                // } else {
+                //     line[i + 1] = '*';
+                // }
                 line[i + 1] = '*';
             } else {
                 line[i + 1] = ' ';
@@ -120,10 +126,6 @@ void print(vector<double> value)
         }
         line[0] = '|';
         line[SIZE + 1] = '|';
-        // for (i = 0; i < SIZE; ++i) {
-        //     cout << line[i];
-        // }
-        // ln = (const char*)line;
         waddstr(W, (const char*)line);
     }
     wnoutrefresh(W);
